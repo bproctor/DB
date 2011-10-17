@@ -1,0 +1,91 @@
+This database class is a simple wrapper for mysqli interface.  It is for the Fuel PHP framework as a simple drop in replacement for the standard database handler.  I wrote it because I prefer to write my own SQL statements and the database handler in the framework is not really meant to work that way.
+
+The reason I believe that it is better to write your own SQL statements rather than having the framework write it for you is that you have more control over your queries.  This may not be very important when writing smaller apps, but for scalability, you'll want to be able to optimize your queries as your site grows.  Instead if fighting the framework to make it do what you want.  I find it much easier to just write the SQL yourself.  It's also more efficient, less likely to be buggy, and easier to debug when there are problems.
+
+The queries use vsprintf() to create the actual query and the parameters are all run through mysqli::escape_string();  There are a variety of select methods for return and also methods for insert, update, replace, delete.  If you need to run a query that doesn't fall into these categories, you can use the query() method.
+
+When a query fails it will throw a Database_Exception Exception.
+
+There is still much work to do and features that I would like to add.  But at the moment, it is very much usable.
+
+Configuration
+-------------
+Your configuration in (fuel/app/config/db.php) should look something like this.
+
+return array(
+	'active' => \Fuel::$env,
+
+	\Fuel::DEVELOPMENT => array(
+		array(
+			'hostname' => 'localhost',
+			'username' => 'username',
+			'password' => 'password',
+			'database' => 'database',
+			'port' => 3306,
+			'charset' => 'utf8'),
+	),
+);
+
+Looking closely at this configuration, you may have noticed it's array within an array.  The reason is because I'm planning on eventually adding the capability of having multiple databases for replication.  You'd define a list of databases and label them as read or write servers.  The database handler could then choose a random read and write server and would then only make read queries to the read servers and write queries to the write servers.  This would make replication pretty much transparent to the application.
+
+
+Usage
+-----
+
+To start, you'll need to get an instance of the database handler.  This code will also make the connection to the database if a connection has not already been established.
+
+$db = DB::instance();
+
+
+// Get all the users.  This returns an array of users
+$users = $db->select('SELECT * FROM users');
+foreach ($users as $user) {
+	echo $user['username'];
+}
+
+// Get a single row from the database  
+$users = $db->select_row('SELECT * FROM users WHERE user_id = "%d"', $user_id);
+echo $users['username'];
+
+// Get a single value from the database
+$username = $db->select_value('SELECT username FROM users WHERE user_id = "%d"', $user_id);
+echo $username;
+
+// Get a flatten array of values
+$usernames = $db->select_flat('SELECT username FROM users');
+foreach ($usernames as $username) {
+	echo $username;
+}
+
+// Get number of rows from last query
+$rows = $db->num_rows();
+
+// Get number of affected rows
+$rows = $db->affected_rows();
+
+// Get last insert ID
+$id = $db->insert_id();
+
+// Insert a row.  Returns the insert ID value
+$id = $db->insert('INSERT INTO users ('username') VALUES ("%d")', $username);
+
+// Update a row
+$db->update('UPDATE users SET username = "%s" WHERE user_id = "%d"', $username, $user_id);
+
+// Replace a row
+$db->replace('REPLACE users ('username') VALUES ("%d")', $username);
+
+// Delete a row
+$db->delete('DELETE FROM users WHERE user_id = "%d"', $user_id);
+
+// Generic query
+$db->query('TRUNCATE users');
+
+// Begin a transaction
+$db->begin();
+
+// Commit a transaction
+$db->commit();
+
+// Rollback a transaction
+$db->rollback();
