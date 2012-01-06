@@ -18,11 +18,11 @@ class Database_Exception extends \FuelException {}
 
 class DB {
 
-	private $read_conn = null;  // The read connection
+	private $read_conn = null;   // The read connection
 	private $write_conn = null;  // The write connection
-	private $last_result;		   // The last query result
-	private $last_error;   // The last error
-	private $sql;				   // Last query
+	private $last_result;		 // The last query result
+	private $last_error;         // The last error
+	private $sql;                // Last query
 
 	/**
 	 * Create the DB object
@@ -36,7 +36,7 @@ class DB {
 	 * Get an instance of the DB class
 	 */
 	public static function instance() {
-		static $instance;
+		static $instance = null;
 
 		if (!($instance instanceof DB)) {
 			$instance = new DB();
@@ -108,7 +108,14 @@ class DB {
 		} catch (ErrorException $e) {
 			throw new Database_Exception('No MySQLi Connection', 0);
 		}
-		($type === 'read') ? $this->read_conn = $conn : $this->write_conn = $conn;
+
+		// If there is only one database, set both read and write so we don't end up with two connections to the same server
+		if ($num_dbs == 1) {
+			$this->write_conn = $this->read_conn = $conn;
+		} else {
+			($type === 'read') ? $this->read_conn = $conn : $this->write_conn = $conn;
+		}
+
 		return $conn->error;
 	}
 
