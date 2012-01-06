@@ -233,7 +233,7 @@ class DB {
 	 */
 	public function begin() {
 		if (!($this->write_conn instanceof mysqli)) {
-			$this->connect();
+			$this->connect('write');
 		}
 		$this->write_conn->autocommit(false);
 	}
@@ -243,7 +243,7 @@ class DB {
 	 */
 	public function commit() {
 		if (!($this->write_conn instanceof mysqli)) {
-			$this->connect();
+			$this->connect('write');
 		}
 
 		$this->write_conn->commit();
@@ -255,7 +255,7 @@ class DB {
 	 */
 	public function rollback() {
 		if (!($this->write_conn instanceof mysqli)) {
-			$this->connect();
+			$this->connect('write');
 		}
 
 		$this->write_conn->rollback();
