@@ -449,7 +449,7 @@ class DB {
 			return false;
 		}
 		$flat = array();
-		while ($members = $this->last_result->fetch_assoc()) {
+		while ($members = $this->last_result->fetch_num()) {
 			foreach ($members as $key => $value) {
 				$flat[] = $value;
 			}
@@ -488,7 +488,7 @@ class DB {
 		if (call_user_func_array(array('DB', 'query'), $args) === false) {
 			return false;
 		}
-		$value = $this->last_result->fetch_array();
+		$value = $this->last_result->fetch_num();
 		return $value[0] ? : false;
 	}
 
