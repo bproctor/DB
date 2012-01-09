@@ -449,8 +449,10 @@ class DB {
 			return false;
 		}
 		$flat = array();
-		while ($members = $this->last_result->fetch_row()) {
-			$flat = array_merge($flat, array_values($members));
+		while ($member = $this->last_result->fetch_row()) {
+			foreach ($member as $k => $v) {
+				$flat[] = $v;
+			}
 		}
 		return $flat;
 	}
@@ -527,5 +529,5 @@ class DB {
 		}
 		return false;
 	}
-	
+
 }
