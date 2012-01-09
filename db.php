@@ -283,7 +283,7 @@ class DB {
 
 		// Set up $this->conn to the right connection
 		if ($write === true) {
-			if ($this->write_conn instanceof mysqli) {
+			if (! ($this->write_conn instanceof mysqli)) {
 				if ($this->connect('write') === false) {
 					return false;
 				}
