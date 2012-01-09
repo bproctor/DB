@@ -106,7 +106,7 @@ class DB {
 				throw new Database_Exception($conn->error, $conn->errno);
 			}
 		} catch (ErrorException $e) {
-			throw new Database_Exception('No MySQLi Connection', 0);
+			throw new Database_Exception('No MySQLi Connection: ' . $e->getMessage(), 0);
 		}
 
 		// If there is only one database, set both read and write so we don't end up with two connections to the same server
@@ -281,7 +281,7 @@ class DB {
 			$write = true;
 		}
 
-		// Set up $this->conn to the right connection
+		// Set up $conn to the right connection
 		if ($write === true) {
 			if (! ($this->write_conn instanceof mysqli)) {
 				if ($this->connect('write') === false) {
@@ -449,10 +449,8 @@ class DB {
 			return false;
 		}
 		$flat = array();
-		while ($members = $this->last_result->fetch_num()) {
-			foreach ($members as $key => $value) {
-				$flat[] = $value;
-			}
+		while ($members = $this->last_result->fetch_row()) {
+			$flat = array_merge($flat, array_values($members));
 		}
 		return $flat;
 	}
@@ -488,8 +486,46 @@ class DB {
 		if (call_user_func_array(array('DB', 'query'), $args) === false) {
 			return false;
 		}
-		$value = $this->last_result->fetch_num();
+		$value = $this->last_result->fetch_row();
 		return $value[0] ? : false;
 	}
 
+	/**
+	 * Get the server status string
+	 *
+	 * @param string $conn
+	 *		The connection type, either read or write.  Defaults to read.
+	 *
+	 * @return string
+	 *		The server status string, or FALSE on error
+	 */
+	public function stat($conn = 'read') {
+		if ($conn == 'read') {
+			return ($this->read_conn instanceof mysqli) ? $this->read_conn->stat() : false;
+		} else if ($conn == 'write') {
+			return ($this->write_conn instanceof mysqli) ? $this->write_conn->stat() : false;
+		}
+		return false;
+	}
+
+	/**
+	 * Get the server version number
+	 * The form of this version number is main_version * 10000 + minor_version * 100 + sub_version
+	 * (i.e. version 4.1.0 is 40100).
+	 *
+	 * @param string $conn
+	 *		The connection type, either read or write.  Defaults to read.
+	 *
+	 * @return string
+	 *		The server version, or false on error
+	 */
+	public function server_version($conn = 'read') {
+		if ($conn == 'read') {
+			return ($this->read_conn instanceof mysqli) ? $this->read_conn->server_version : false;
+		} else if ($conn == 'write') {
+			return ($this->write_conn instanceof mysqli) ? $this->write_conn->server_version : false;
+		}
+		return false;
+	}
+	
 }
