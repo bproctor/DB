@@ -102,7 +102,7 @@ class DB {
 				throw new Database_Exception($conn->error, $conn->errno);
 			}
 
-			if ($conn->set_charset($char) === false) {
+			if (! empty($char) && $conn->set_charset($char) === false) {
 				throw new Database_Exception($conn->error, $conn->errno);
 			}
 		} catch (ErrorException $e) {
@@ -287,21 +287,21 @@ class DB {
 				if ($this->connect('write') === false) {
 					return false;
 				}
-				$conn &= $this->write_conn;
+				$conn = $this->write_conn;
 			}
 		} else {
 			// If this is a read, but we already have a write connection
 			// We use write anyway, because once the first write has been done, all queries need to go through the master
 			// To help avoid select after insert replication problems
 			if ($this->write_conn instanceof mysqli) {
-				$conn &= $this->write_conn;
+				$conn = $this->write_conn;
 			} else if ($this->read_conn instanceof mysql) {
-				$conn &= $this->read_conn;
+				$conn = $this->read_conn;
 			} else {
 				if ($this->connect('read') === false) {
 					return false;
 				}
-				$conn &= $this->read_conn;
+				$conn = $this->read_conn;
 			}
 		}
 
