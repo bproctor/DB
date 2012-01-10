@@ -18,30 +18,31 @@ class Database_Exception extends \FuelException {}
 
 class DB {
 
-	private $read_conn = null;   // The read connection
-	private $write_conn = null;  // The write connection
-	private $last_result;		 // The last query result
-	private $last_error;         // The last error
-	private $sql;                // Last query
+	private $read_conn = null;     // The read connection
+	private $write_conn = null;    // The write connection
+	private $last_result;		   // The last query result
+	private $last_error;           // The last error
+	private $sql;                  // Last query
+	private $instances = array();  // Array of instances
 
 	/**
 	 * Create the DB object
 	 */
 
-	private function __construct() {
+	private function __construct($name) {
+		$this->instances[$name] = $this;
 		\Config::load('db', true);
 	}
 
 	/**
 	 * Get an instance of the DB class
 	 */
-	public static function instance() {
-		static $instance = null;
-
-		if (!($instance instanceof DB)) {
-			$instance = new DB();
+	public static function instance($name = 'default') {
+		if (isset ($this->instances[$name]) and $this->instance[$name] instanceof DB) {
+			return $this->instances[$name];
 		}
-		return $instance;
+		$this->instance = new DB($name);
+		return $this->instance;
 	}
 
 	/**
