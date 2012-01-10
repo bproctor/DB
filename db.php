@@ -18,12 +18,13 @@ class Database_Exception extends \FuelException {}
 
 class DB {
 
-	private $read_conn = null;     // The read connection
-	private $write_conn = null;    // The write connection
-	private $last_result;		   // The last query result
-	private $last_error;           // The last error
-	private $sql;                  // Last query
-	private $instances = array();  // Array of instances
+	private $read_conn = null;         // The read connection
+	private $write_conn = null;        // The write connection
+	private $last_result;		       // The last query result
+	private $last_error;               // The last error
+	private $sql;                      // Last query
+	private $instances = array();      // Array of instances
+	private $master_on_write = true;   // If true, chooses to use the master for read queries once a write occurs
 
 	/**
 	 * Create the DB object
@@ -79,21 +80,21 @@ class DB {
 
 			// Use the first connection, if this is a write connection, or there is only one server to use
 			if ($type == 'write' || ($type == 'read' && $num_dbs == 1)) {
-				$host or $host = $config[0]['hostname'];
-				$user or $user = $config[0]['username'];
-				$pass or $pass = $config[0]['password'];
-				$name or $name = $config[0]['database'];
-				$port or $port = $config[0]['port'];
-				$char or $char = $config[0]['charset'];
+				$host or $host = $config['servers'][0]['hostname'];
+				$user or $user = $config['servers'][0]['username'];
+				$pass or $pass = $config['servers'][0]['password'];
+				$name or $name = $config['servers'][0]['database'];
+				$port or $port = $config['servers'][0]['port'];
+				$char or $char = $config['servers'][0]['charset'];
 			} else if ($type == 'read') {
 				// Choose a random read server
 				$i = rand(1, $num_dbs - 1);
-				$host or $host = $config[$i]['hostname'];
-				$user or $user = $config[$i]['username'];
-				$pass or $pass = $config[$i]['password'];
-				$name or $name = $config[$i]['database'];
-				$port or $port = $config[$i]['port'];
-				$char or $char = $config[$i]['charset'];
+				$host or $host = $config['servers'][$i]['hostname'];
+				$user or $user = $config['servers'][$i]['username'];
+				$pass or $pass = $config['servers'][$i]['password'];
+				$name or $name = $config['servers'][$i]['database'];
+				$port or $port = $config['servers'][$i]['port'];
+				$char or $char = $config['servers'][$i]['charset'];
 			} else {
 				throw new Database_Exception('Invalid connection type selected', 0);
 			}
@@ -294,7 +295,7 @@ class DB {
 			// If this is a read, but we already have a write connection
 			// We use write anyway, because once the first write has been done, all queries need to go through the master
 			// To help avoid select after insert replication problems
-			if ($this->write_conn instanceof mysqli) {
+			if ($this->master_on_write and $this->write_conn instanceof mysqli) {
 				$conn = $this->write_conn;
 			} else if ($this->read_conn instanceof mysql) {
 				$conn = $this->read_conn;
