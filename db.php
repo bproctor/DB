@@ -16,34 +16,45 @@
  */
 class Database_Exception extends \FuelException {}
 
-class DB {
+/**
+ * Controls the DB instances
+ */
+abstract class DB {
+
+	/**
+	 * Creates a new instance of the database class.
+	 *
+	 * @param string $name
+	 *		The name of the instance to create
+	 */
+	final public static function instance($name = 'default') {
+		static $instances = array();
+		if (isset ($instances[$name]) and $instances[$name] instanceof DB_Driver) {
+			return $instances[$name];
+		}
+		$instances[$name] = new DB_Driver();
+		return $instances[$name];
+	}
+}
+
+/**
+ * The main database driver
+ */
+class DB_Driver {
 
 	private $read_conn = null;         // The read connection
 	private $write_conn = null;        // The write connection
 	private $last_result;		       // The last query result
 	private $last_error;               // The last error
 	private $sql;                      // Last query
-	private $instances = array();      // Array of instances
 	private $master_on_write = true;   // If true, chooses to use the master for read queries once a write occurs
 
 	/**
 	 * Create the DB object
 	 */
 
-	private function __construct($name) {
-		$this->instances[$name] = $this;
+	public function __construct() {
 		\Config::load('db', true);
-	}
-
-	/**
-	 * Get an instance of the DB class
-	 */
-	public static function instance($name = 'default') {
-		if (isset ($this->instances[$name]) and $this->instance[$name] instanceof DB) {
-			return $this->instances[$name];
-		}
-		$this->instance = new DB($name);
-		return $this->instance;
 	}
 
 	/**
@@ -340,7 +351,7 @@ class DB {
 	 */
 	public function replace() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->last_result;
@@ -357,7 +368,7 @@ class DB {
 	 */
 	public function insert() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->write_conn->insert_id;
@@ -374,7 +385,7 @@ class DB {
 	 */
 	public function update() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->write_conn->affected_rows;
@@ -391,7 +402,7 @@ class DB {
 	 */
 	public function delete() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->write_conn->affected_rows;
@@ -408,7 +419,7 @@ class DB {
 	 */
 	public function select() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		$members = array();
@@ -429,7 +440,7 @@ class DB {
 	 */
 	public function select_object() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->last_result;
@@ -447,7 +458,7 @@ class DB {
 	 */
 	public function select_flat() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		$flat = array();
@@ -470,7 +481,7 @@ class DB {
 	 */
 	public function select_row() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->last_result->fetch_assoc();
@@ -487,7 +498,7 @@ class DB {
 	 */
 	public function select_value() {
 		$args = func_get_args();
-		if (call_user_func_array(array('DB', 'query'), $args) === false) {
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		$value = $this->last_result->fetch_row();
