@@ -290,9 +290,7 @@ class DB_Driver {
 		$args = func_get_args();
 
 		// Determine if this is a read or write request
-		if (strncasecmp(trim($args[0]), 'SELECT', 6) === 0) {
-			$write = true;
-		}
+		$write = strncasecmp(trim($args[0]), 'SELECT', 6) !== 0;
 
 		// Set up $conn to the right connection
 		if ($write === true) {
@@ -300,8 +298,8 @@ class DB_Driver {
 				if ($this->connect('write') === false) {
 					return false;
 				}
-				$conn = $this->write_conn;
 			}
+			$conn = $this->write_conn;
 		} else {
 			// If this is a read, but we already have a write connection
 			// We use write anyway, because once the first write has been done, all queries need to go through the master

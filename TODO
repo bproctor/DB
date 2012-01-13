@@ -1,0 +1,3 @@
+
+- Fix connect().  It should take care of defaults and handle improper configuration correctly.
+- If there are more than one instance, it would be more efficient if they shared the same
