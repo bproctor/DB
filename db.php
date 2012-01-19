@@ -288,7 +288,7 @@ class DB_Driver {
 	public function query() {
 
 		$args = func_get_args();
-
+		
 		// Determine if this is a read or write request
 		$write = strncasecmp(trim($args[0]), 'SELECT', 6) !== 0;
 
