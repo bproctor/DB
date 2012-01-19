@@ -12,7 +12,7 @@
  * @copyright   Copyright (c) 2010-2012 Brad Proctor
  * @license     MIT License (http://www.opensource.org/licenses/mit-license.php)
  * @link        http://bradleyproctor.com/
- * @version     1.1
+ * @version     1.3
  */
 class Database_Exception extends \FuelException {}
 
@@ -87,7 +87,7 @@ class DB_Driver {
 	public function connect($type = 'read', $host = null, $user = null, $pass = null, $name = null, $port = null, $char = null) {
 		try {
 			$config = \Config::get('db.' . \Config::get('db.active'));
-			$num_dbs = count($config);
+			$num_dbs = count($config['servers']);
 
 			// Use the first connection, if this is a write connection, or there is only one server to use
 			if ($type == 'write' || ($type == 'read' && $num_dbs == 1)) {
@@ -319,7 +319,7 @@ class DB_Driver {
 		// Set up the rest of the parameters
 		$count = count($args);
 		for ($i = 1; $i < $count; $i++) {
-			$args[$i] = addcslashes($write ? $conn->escape_string($args[$i]) : $conn->escape_string($args[i]), '%_');
+			$args[$i] = addcslashes($write ? $conn->escape_string($args[$i]) : $conn->escape_string($args[$i]), '%_');
 		}
 		$this->sql = array_shift($args);
 		$this->sql = vsprintf($this->sql, $args);
