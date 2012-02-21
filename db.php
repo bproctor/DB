@@ -375,7 +375,7 @@ class DB_Driver {
 			$s2 .= '"' . $v . '", ';
 		}
 		$sql = 'INSERT INTO `' . $table .'` ' . substr($s1, 0, -2) . ' VALUES (' . substr($s2, 0, -2) . ')';
-		if (call_user_func_array(array('DB_Driver', 'query'), $sql) === false) {
+		if ($this->query($sql) === false) {
 			return false;
 		}
 		return $this->write_conn->insert_id;
@@ -415,7 +415,7 @@ class DB_Driver {
 	 */
 	public function update_array($table, array $data, $sql = null) {
 		$str = 'UPDATE `' . $table . '` SET ' . substr($str, 0, -2) . $sql;
-		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
+		if ($this->query($str) === false) {
 			return false;
 		}
 		return $this->write_conn->affected_rows;
