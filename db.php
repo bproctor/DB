@@ -63,49 +63,31 @@ class DB_Driver {
 	 * @param string $type
 	 * 		Set to 'read' for a read connection, 'write' for a write connection
 	 *
-	 * @param string $host
-	 * 		Hostname to connect to
-	 *
-	 * @param string $user
-	 * 		The database usename
-	 *
-	 * @param string $pass
-	 * 		The database password
-	 *
-	 * @param string $name
-	 * 		The database name
-	 *
-	 * @param int $port
-	 * 		The port to use to connect
-	 *
-	 * @param string $char
-	 * 		The character set
-	 *
 	 * @return bool
 	 * 		Returns TRUE on success, false on error
 	 */
-	public function connect($type = 'read', $host = null, $user = null, $pass = null, $name = null, $port = null, $char = null) {
+	public function connect($type = 'read') {
 		try {
 			$config = \Config::get('db.' . \Config::get('db.active'));
 			$num_dbs = count($config['servers']);
 
 			// Use the first connection, if this is a write connection, or there is only one server to use
 			if ($type == 'write' || ($type == 'read' && $num_dbs == 1)) {
-				$host or $host = $config['servers'][0]['hostname'];
-				$user or $user = $config['servers'][0]['username'];
-				$pass or $pass = $config['servers'][0]['password'];
-				$name or $name = $config['servers'][0]['database'];
-				$port or $port = $config['servers'][0]['port'];
-				$char or $char = $config['servers'][0]['charset'];
+				$host = $config['servers'][0]['hostname'];
+				$user = $config['servers'][0]['username'];
+				$pass = $config['servers'][0]['password'];
+				$name = $config['servers'][0]['database'];
+				$port = $config['servers'][0]['port'];
+				$char = $config['servers'][0]['charset'];
 			} else if ($type == 'read') {
 				// Choose a random read server
 				$i = rand(1, $num_dbs - 1);
-				$host or $host = $config['servers'][$i]['hostname'];
-				$user or $user = $config['servers'][$i]['username'];
-				$pass or $pass = $config['servers'][$i]['password'];
-				$name or $name = $config['servers'][$i]['database'];
-				$port or $port = $config['servers'][$i]['port'];
-				$char or $char = $config['servers'][$i]['charset'];
+				$host = $config['servers'][$i]['hostname'];
+				$user = $config['servers'][$i]['username'];
+				$pass = $config['servers'][$i]['password'];
+				$name = $config['servers'][$i]['database'];
+				$port = $config['servers'][$i]['port'];
+				$char = $config['servers'][$i]['charset'];
 			} else {
 				throw new Database_Exception('Invalid connection type selected', 0);
 			}
@@ -288,7 +270,7 @@ class DB_Driver {
 	public function query() {
 
 		$args = func_get_args();
-		
+
 		// Determine if this is a read or write request
 		$write = strncasecmp(trim($args[0]), 'SELECT', 6) !== 0;
 
@@ -322,7 +304,9 @@ class DB_Driver {
 			$args[$i] = addcslashes($write ? $conn->escape_string($args[$i]) : $conn->escape_string($args[$i]), '%_');
 		}
 		$this->sql = array_shift($args);
-		$this->sql = vsprintf($this->sql, $args);
+		if ($count > 1) {
+			$this->sql = vsprintf($this->sql, $args);
+		}
 
 		// Free the last result
 		if ($this->last_result instanceof mysqli_result) {
@@ -373,16 +357,64 @@ class DB_Driver {
 	}
 
 	/**
+	 * Perform an INSERT query with an array
+	 *
+	 * @param string $table
+	 *		The table to insert into
+	 *
+	 * @param array $data
+	 *		The data to insert, associative array
+	 *
+	 * @return int|bool
+	 *		Returns the insert ID, or FALSE on error
+	 */
+	public function insert_array($table, array $data) {
+		$s1 = $s2 = '';
+		foreach ($data as $k => $v) {
+			$s1 .= ' `' . $k . '`, ';
+			$s2 .= '"' . $v . '", ';
+		}
+		$sql = 'INSERT INTO `' . $table .'` ' . substr($s1, 0, -2) . ' VALUES (' . substr($s2, 0, -2) . ')';
+		if (call_user_func_array(array('DB_Driver', 'query'), $sql) === false) {
+			return false;
+		}
+		return $this->write_conn->insert_id;
+	}
+
+	/**
 	 * Performs an UPDATE query
 	 *
 	 * @param string $str
 	 *    The SQL query to execute
 	 *
-	 * @return int
+	 * @return int|bool
 	 *    Returns the number of rows updated, or FALSE on error
 	 */
 	public function update() {
 		$args = func_get_args();
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
+			return false;
+		}
+		return $this->write_conn->affected_rows;
+	}
+
+	/**
+	 * Perform an UPDATE query
+	 *
+	 * @param string $table
+	 *		Name of the table to update
+	 *
+	 * @param array $data
+	 *		The data to update
+	 *
+	 * @param string $sql
+	 *		(Optional) Additional sql appended to end such as a WHERE clause
+	 *
+	 * @return int|bool
+	 *		Returns the number of affected rows, or FALSE on error
+	 */
+	public function update_array($table, array $data, $sql = null) {
+		$str = 'UPDATE `' . $table . '` SET ' . substr($str, 0, -2) . $sql;
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
