@@ -12,7 +12,7 @@
  * @copyright   Copyright (c) 2010-2012 Brad Proctor
  * @license     MIT License (http://www.opensource.org/licenses/mit-license.php)
  * @link        http://bradleyproctor.com/
- * @version     1.3
+ * @version     1.4
  */
 class Database_Exception extends \FuelException {}
 
@@ -374,7 +374,7 @@ class DB_Driver {
 			$s1 .= ' `' . $k . '`, ';
 			$s2 .= '"' . $v . '", ';
 		}
-		$sql = 'INSERT INTO `' . $table .'` ' . substr($s1, 0, -2) . ' VALUES (' . substr($s2, 0, -2) . ')';
+		$sql = 'INSERT INTO `' . $table .'` (' . substr($s1, 0, -2) . ') VALUES (' . substr($s2, 0, -2) . ')';
 		if ($this->query($sql) === false) {
 			return false;
 		}
@@ -414,12 +414,17 @@ class DB_Driver {
 	 *		Returns the number of affected rows, or FALSE on error
 	 */
 	public function update_array($table, array $data, $sql = null) {
+		$args = func_get_args();
+		array_shift($args);
+		array_shift($args);
+		$sql = array_shift($args);
 		$str = '';
 		foreach ($data as $k => $v) {
 			$str .= '`'.$k.'` = "'.$v.'", ';
 		}
-		$str = 'UPDATE `' . $table . '` SET ' . substr($str, 0, -2) . $sql;
-		if ($this->query($str) === false) {
+		$str = 'UPDATE `' . $table . '` SET ' . substr($str, 0, -2) . ' ' . $sql;
+		array_unshift($args, $str);
+		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
 		}
 		return $this->write_conn->affected_rows;
