@@ -414,6 +414,10 @@ class DB_Driver {
 	 *		Returns the number of affected rows, or FALSE on error
 	 */
 	public function update_array($table, array $data, $sql = null) {
+		$str = '';
+		foreach ($data as $k => $v) {
+			$str .= '`'.$k.'` = "'.$v.'", ';
+		}
 		$str = 'UPDATE `' . $table . '` SET ' . substr($str, 0, -2) . $sql;
 		if ($this->query($str) === false) {
 			return false;
