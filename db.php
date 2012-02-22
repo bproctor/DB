@@ -44,9 +44,9 @@ class DB_Driver {
 
 	private $read_conn = null;         // The read connection
 	private $write_conn = null;        // The write connection
-	private $last_result;		       // The last query result
-	private $last_error;               // The last error
-	private $sql;                      // Last query
+	private $last_result = null;       // The last query result
+	private $last_error = null;        // The last error
+	private $sql = null;               // Last query
 	private $master_on_write = true;   // If true, chooses to use the master for read queries once a write occurs
 
 	/**
@@ -64,7 +64,7 @@ class DB_Driver {
 	 * 		Set to 'read' for a read connection, 'write' for a write connection
 	 *
 	 * @return bool
-	 * 		Returns TRUE on success, false on error
+	 * 		Returns TRUE on success, FALSE on error
 	 */
 	public function connect($type = 'read') {
 		try {
@@ -154,7 +154,7 @@ class DB_Driver {
 	 * Returns the last error
 	 *
 	 * @return string
-	 *    Returns the last error, FALSE if no error
+	 *    Returns the last error
 	 */
 	public function error() {
 		return $this->last_error;
@@ -177,7 +177,7 @@ class DB_Driver {
 	/**
 	 * Returns the last inserted ID
 	 *
-	 * @return int
+	 * @return int|bool
 	 *    Returns the last insert ID, or FALSE if no insert ID
 	 */
 	public function insert_id() {
@@ -190,7 +190,7 @@ class DB_Driver {
 	/**
 	 * Retuns the number of rows from the last query
 	 *
-	 * @return int
+	 * @return int|bool
 	 *    Return the number of rows the last query, or FALSE
 	 */
 	public function num_rows() {
@@ -203,7 +203,7 @@ class DB_Driver {
 	/**
 	 * Returns the number of affected rows from the last query
 	 *
-	 * @return int
+	 * @return int|bool
 	 * 		Return the number of affected rows from last query, or FALSE
 	 */
 	public function affected_rows() {
@@ -264,7 +264,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The query string to execute
 	 *
-	 * @return object
+	 * @return object|bool
 	 *    Returns the results mysqli object, or FALSE if there is an error
 	 */
 	public function query() {
@@ -328,7 +328,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The SQL query to execute
 	 *
-	 * @return object
+	 * @return object|bool
 	 *    Returns the mysqli results, or FALSE on error
 	 */
 	public function replace() {
@@ -345,7 +345,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The SQL query to execute
 	 *
-	 * @return int
+	 * @return int|bool
 	 *    Returns the insert ID, or FALSE on error
 	 */
 	public function insert() {
@@ -436,7 +436,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The SQL statement to execute
 	 *
-	 * @return int
+	 * @return int|bool
 	 *    Returns the number of rows updated, or FALSE on error
 	 */
 	public function delete() {
@@ -453,7 +453,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The query string to execute
 	 *
-	 * @return array
+	 * @return array|bool
 	 *    The results array or FALSE if there was an error
 	 */
 	public function select() {
@@ -474,7 +474,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The SQL query to execute
 	 *
-	 * @return object
+	 * @return object|bool
 	 *    Returns the mysqli results as an object, or FALSE on error
 	 */
 	public function select_object() {
@@ -492,7 +492,7 @@ class DB_Driver {
 	 * @param string $str
 	 * 		The query string to execute
 	 *
-	 * @return array
+	 * @return array|bool
 	 * 		The results array or FALSE if there was an error
 	 */
 	public function select_flat() {
@@ -515,7 +515,7 @@ class DB_Driver {
 	 * @param string $str
 	 *    The query string to execute
 	 *
-	 * @return array
+	 * @return array|bool
 	 *    The results array or FALSE if there was an error
 	 */
 	public function select_row() {
@@ -550,7 +550,7 @@ class DB_Driver {
 	 * @param string $conn
 	 *		The connection type, either read or write.  Defaults to read.
 	 *
-	 * @return string
+	 * @return string|bool
 	 *		The server status string, or FALSE on error
 	 */
 	public function stat($conn = 'read') {
@@ -570,7 +570,7 @@ class DB_Driver {
 	 * @param string $conn
 	 *		The connection type, either read or write.  Defaults to read.
 	 *
-	 * @return string
+	 * @return string|bool
 	 *		The server version, or false on error
 	 */
 	public function server_version($conn = 'read') {
