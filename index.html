@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Db : A mysqli wrapper class" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Db</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bproctor/DB">Fork Me on GitHub</a>
+
+          <h1 id="project_title">Db</h1>
+          <h2 id="project_tagline">A mysqli wrapper class</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/bproctor/DB/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/bproctor/DB/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>This database class is a simple wrapper for mysqli interface.  It is for the Fuel PHP framework as a simple drop in replacement for the standard database handler.  I wrote it because I prefer to write my own SQL statements and the database handler in the framework is not really meant to work that way.</p>
+
+<p>The reason I believe that it is better to write your own SQL statements rather than having the framework write it for you is that you have more control over your queries.  This may not be very important when writing smaller apps, but for scalability, you'll want to be able to optimize your queries as your site grows.  Instead if fighting the framework to make it do what you want.  I find it much easier to just write the SQL yourself.  It's also more efficient, less likely to be buggy, and easier to debug when there are problems.</p>
+
+<p>The queries use vsprintf() to create the actual query and the parameters are all run through <code>mysqli::escape_string();</code>  There are a variety of select methods for return and also methods for insert, update, replace, delete.  If you need to run a query that doesn't fall into these categories, you can use the query() method.</p>
+
+<p>When a query fails it will throw a Database_Exception Exception.</p>
+
+<p>There is still much work to do and features that I would like to add.  But at the moment, it is very much usable.</p>
+
+<h3>Configuration</h3>
+
+<p>Your configuration in (fuel/app/config/db.php) should look something like this.</p>
+
+<pre><code>return array(
+'active' =&gt; \Fuel::$env,
+
+\Fuel::DEVELOPMENT =&gt; array(
+    'options' =&gt; array(
+        'master_on_write' =&gt; 'true',
+    ),
+    'servers' =&gt; array(
+        array(
+            'hostname' =&gt; 'localhost',
+            'username' =&gt; 'root',
+            'password' =&gt; 'root',
+            'database' =&gt; 'admin',
+            'port'     =&gt; '3306',
+            'charset'  =&gt; 'utf8'        // Optional
+        ),
+    ),
+),
+);
+</code></pre>
+
+<p>You'll may that the configuration is an array within an array.  That is because you can define multiple servers for master-slave replication.  The first server definition is the master and any servers that you define after that are read servers.</p>
+
+<p>The class will automatically select which server to use for your query.  If the query is a SELECT query, it chooses a random slave server to read from.</p>
+
+<p>If you set master_on_write to true.  The master will be used for all read queries once a write occurs. This is to help prevent select after insert problem caused by slow replication.  You'll have to determine for your application whether the extra load on your master is worth it.</p>
+
+<p>###Usage</p>
+
+<p>To start, you'll need to get an instance of the database handler.  This code will also make the connection to the database if a connection has not already been established.</p>
+
+<pre><code>$db = DB::instance();
+</code></pre>
+
+<p>You can also have multiple named instances</p>
+
+<pre><code>$db = DB::instance('my-database');
+</code></pre>
+
+<p>The name of the default database instance is 'default'.  The follow two calls are identical:</p>
+
+<pre><code>$db = DB::instance()
+$db = DB::instance('default');
+</code></pre>
+
+<p>###Methods</p>
+
+<pre><code>// Get all the users.  This returns an array of users
+$users = $db-&gt;select('SELECT * FROM users');
+foreach ($users as $user) {
+echo $user['username'];
+}
+
+// Get a single row from the database
+$users = $db-&gt;select_row('SELECT * FROM users WHERE user_id = "%d"', $user_id);
+echo $users['username'];
+
+// Get a single value from the database
+$username = $db-&gt;select_value('SELECT username FROM users WHERE user_id = "%d"', $user_id);
+echo $username;
+
+// Get a flatten array of values
+$usernames = $db-&gt;select_flat('SELECT username FROM users');
+foreach ($usernames as $username) {
+     echo $username;
+}
+
+// Get number of rows from last query
+$rows = $db-&gt;num_rows();
+
+// Get number of affected rows
+$rows = $db-&gt;affected_rows();
+
+// Get last insert ID
+$id = $db-&gt;insert_id();
+
+// Insert a row.  Returns the insert ID value
+$id = $db-&gt;insert('INSERT INTO users ('username') VALUES ("%d")', $username);
+
+// Update a row
+$db-&gt;update('UPDATE users SET username = "%s" WHERE user_id = "%d"', $username, $user_id);
+
+// Replace a row
+$db-&gt;replace('REPLACE users ('username') VALUES ("%d")', $username);
+
+// Delete a row
+$db-&gt;delete('DELETE FROM users WHERE user_id = "%d"', $user_id);
+
+// Generic query
+$db-&gt;query('TRUNCATE users');
+
+// Begin a transaction
+$db-&gt;begin();
+
+// Commit a transaction
+$db-&gt;commit();
+
+// Rollback a transaction
+$db-&gt;rollback();
+
+// Get server status string
+$db-&gt;stat();                    // Server status of the read server
+$db-&gt;stat('read');              // Server status of the read server
+$db-&gt;stat('write');             // Server status of the write server
+
+// Get the server version
+$db-&gt;server_version();          // Server version of the read server
+$db-&gt;server_version('read');    // Server version of the read server
+$db-&gt;server_version('write');   // Server version of the write server
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Db maintained by <a href="https://github.com/bproctor">bproctor</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
