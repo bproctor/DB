@@ -68,27 +68,27 @@ foreach ($users as $user) {
 }
 
 // Get a single row from the database
-$users = $db->select_row('SELECT * FROM users WHERE user_id = "%d"', $user_id);
+$users = $db->selectRow('SELECT * FROM users WHERE user_id = "%d"', $user_id);
 echo $users['username'];
 
 // Get a single value from the database
-$username = $db->select_value('SELECT username FROM users WHERE user_id = "%d"', $user_id);
+$username = $db->selectValue('SELECT username FROM users WHERE user_id = "%d"', $user_id);
 echo $username;
 
 // Get a flatten array of values
-$usernames = $db->select_flat('SELECT username FROM users');
+$usernames = $db->selectFlat('SELECT username FROM users');
 foreach ($usernames as $username) {
 	echo $username;
 }
 
 // Get number of rows from last query
-$rows = $db->num_rows();
+$rows = $db->rows();
 
 // Get number of affected rows
-$rows = $db->affected_rows();
+$rows = $db->affectedRows();
 
 // Get last insert ID
-$id = $db->insert_id();
+$id = $db->insertId();
 
 // Insert a row.  Returns the insert ID value
 $id = $db->insert('INSERT INTO users ('username') VALUES ("%d")', $username);
@@ -120,6 +120,6 @@ $db->stat('read');				// Server status of the read server
 $db->stat('write');				// Server status of the write server
 
 // Get the server version
-$db->server_version();			// Server version of the read server
-$db->server_version('read');	// Server version of the read server
-$db->server_version('write');	// Server version of the write server
+$db->serverVersion();			// Server version of the read server
+$db->serverVersion('read');	// Server version of the read server
+$db->serverVersion('write');	// Server version of the write server

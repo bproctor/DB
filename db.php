@@ -14,12 +14,16 @@
  * @link        http://bradleyproctor.com/
  * @version     1.4
  */
-class Database_Exception extends \FuelException {}
+class Database_Exception extends \FuelException
+{
+
+}
 
 /**
  * Controls the DB instances
  */
-abstract class DB {
+abstract class DB
+{
 
 	/**
 	 * Creates a new instance of the database class.
@@ -27,7 +31,8 @@ abstract class DB {
 	 * @param string $name
 	 *		The name of the instance to create
 	 */
-	final public static function instance($name = 'default') {
+	final public static function instance($name = 'default')
+	{
 		static $instances = array();
 		if (isset ($instances[$name]) and $instances[$name] instanceof DB_Driver) {
 			return $instances[$name];
@@ -40,7 +45,8 @@ abstract class DB {
 /**
  * The main database driver
  */
-class DB_Driver {
+class DB_Driver
+{
 
 	private $read_conn = null;         // The read connection
 	private $write_conn = null;        // The write connection
@@ -53,7 +59,8 @@ class DB_Driver {
 	 * Create the DB object
 	 */
 
-	public function __construct() {
+	public function __construct()
+	{
 		\Config::load('db', true);
 	}
 
@@ -66,7 +73,8 @@ class DB_Driver {
 	 * @return bool
 	 * 		Returns TRUE on success, FALSE on error
 	 */
-	public function connect($type = 'read') {
+	public function connect($type = 'read')
+	{
 		try {
 			$config = \Config::get('db.' . \Config::get('db.active'));
 			$num_dbs = count($config['servers']);
@@ -120,7 +128,8 @@ class DB_Driver {
 	 * @return bool
 	 *    Returns the FALSE if the database failed to close, TRUE on success
 	 */
-	public function __destruct() {
+	public function __destruct()
+	{
 		return $this->close();
 	}
 
@@ -130,7 +139,8 @@ class DB_Driver {
 	 * @return bool
 	 *    Returns the FALSE if the database failed to close, TRUE on success
 	 */
-	public function close($type = null) {
+	public function close($type = null)
+	{
 		if ($type == 'read') {
 			if ($this->read_conn instanceof mysqli) {
 				return $this->read_conn->close();
@@ -156,7 +166,8 @@ class DB_Driver {
 	 * @return string
 	 *    Returns the last error
 	 */
-	public function error() {
+	public function error()
+	{
 		return $this->last_error;
 	}
 
@@ -166,7 +177,8 @@ class DB_Driver {
 	 * @return bool
 	 * 		Returns TRUE if the result was successfully freed, FALSE on error
 	 */
-	public function free() {
+	public function free()
+	{
 		if ($this->last_result instanceof mysqli_result) {
 			$this->last_result->free();
 			return true;
@@ -180,7 +192,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *    Returns the last insert ID, or FALSE if no insert ID
 	 */
-	public function insert_id() {
+	public function insertId()
+	{
 		if ($this->write_conn instanceof mysqli) {
 			return $this->write_conn->insert_id;
 		}
@@ -193,7 +206,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *    Return the number of rows the last query, or FALSE
 	 */
-	public function num_rows() {
+	public function rows()
+	{
 		if ($this->last_result instanceof mysqli_result) {
 			return $this->last_result->num_rows;
 		}
@@ -206,7 +220,8 @@ class DB_Driver {
 	 * @return int|bool
 	 * 		Return the number of affected rows from last query, or FALSE
 	 */
-	public function affected_rows() {
+	public function affectedRows()
+	{
 		if ($this->last_result instanceof mysqli_result) {
 			return $this->last_result->affected_rows;
 		}
@@ -219,14 +234,16 @@ class DB_Driver {
 	 * @return string
 	 *    Returns the last sql executed
 	 */
-	public function last_query() {
+	public function lastQuery()
+	{
 		return $this->sql;
 	}
 
 	/**
 	 * Begin a new transaction
 	 */
-	public function begin() {
+	public function begin()
+	{
 		if (!($this->write_conn instanceof mysqli)) {
 			$this->connect('write');
 		}
@@ -236,7 +253,8 @@ class DB_Driver {
 	/**
 	 * Commit the current transaction
 	 */
-	public function commit() {
+	public function commit()
+	{
 		if (!($this->write_conn instanceof mysqli)) {
 			$this->connect('write');
 		}
@@ -248,7 +266,8 @@ class DB_Driver {
 	/**
 	 * Rollback a transaction
 	 */
-	public function rollback() {
+	public function rollback()
+	{
 		if (!($this->write_conn instanceof mysqli)) {
 			$this->connect('write');
 		}
@@ -267,7 +286,8 @@ class DB_Driver {
 	 * @return object|bool
 	 *    Returns the results mysqli object, or FALSE if there is an error
 	 */
-	public function query() {
+	public function query()
+	{
 
 		$args = func_get_args();
 
@@ -331,7 +351,8 @@ class DB_Driver {
 	 * @return object|bool
 	 *    Returns the mysqli results, or FALSE on error
 	 */
-	public function replace() {
+	public function replace()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -348,7 +369,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *    Returns the insert ID, or FALSE on error
 	 */
-	public function insert() {
+	public function insert()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -368,7 +390,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *		Returns the insert ID, or FALSE on error
 	 */
-	public function insert_array($table, array $data) {
+	public function insertArray($table, array $data)
+	{
 		$s1 = $s2 = '';
 		foreach ($data as $k => $v) {
 			$s1 .= ' `' . $k . '`, ';
@@ -390,7 +413,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *    Returns the number of rows updated, or FALSE on error
 	 */
-	public function update() {
+	public function update()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -413,7 +437,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *		Returns the number of affected rows, or FALSE on error
 	 */
-	public function update_array($table, array $data, $sql = null) {
+	public function updateArray($table, array $data, $sql = null)
+	{
 		$args = func_get_args();
 		array_shift($args);
 		array_shift($args);
@@ -439,7 +464,8 @@ class DB_Driver {
 	 * @return int|bool
 	 *    Returns the number of rows updated, or FALSE on error
 	 */
-	public function delete() {
+	public function delete()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -456,7 +482,8 @@ class DB_Driver {
 	 * @return array|bool
 	 *    The results array or FALSE if there was an error
 	 */
-	public function select() {
+	public function select()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -477,7 +504,8 @@ class DB_Driver {
 	 * @return object|bool
 	 *    Returns the mysqli results as an object, or FALSE on error
 	 */
-	public function select_object() {
+	public function selectObject()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -495,7 +523,8 @@ class DB_Driver {
 	 * @return array|bool
 	 * 		The results array or FALSE if there was an error
 	 */
-	public function select_flat() {
+	public function selectFlat()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -518,7 +547,8 @@ class DB_Driver {
 	 * @return array|bool
 	 *    The results array or FALSE if there was an error
 	 */
-	public function select_row() {
+	public function selectRow()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -535,7 +565,8 @@ class DB_Driver {
 	 * @return mixed
 	 *    The result or FALSE if there was an error
 	 */
-	public function select_value() {
+	public function selectValue()
+	{
 		$args = func_get_args();
 		if (call_user_func_array(array('DB_Driver', 'query'), $args) === false) {
 			return false;
@@ -553,7 +584,8 @@ class DB_Driver {
 	 * @return string|bool
 	 *		The server status string, or FALSE on error
 	 */
-	public function stat($conn = 'read') {
+	public function stat($conn = 'read')
+	{
 		if ($conn == 'read') {
 			return ($this->read_conn instanceof mysqli) ? $this->read_conn->stat() : false;
 		} else if ($conn == 'write') {
@@ -573,7 +605,8 @@ class DB_Driver {
 	 * @return string|bool
 	 *		The server version, or false on error
 	 */
-	public function server_version($conn = 'read') {
+	public function serverVersion($conn = 'read')
+	{
 		if ($conn == 'read') {
 			return ($this->read_conn instanceof mysqli) ? $this->read_conn->server_version : false;
 		} else if ($conn == 'write') {
